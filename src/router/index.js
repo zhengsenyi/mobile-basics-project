@@ -1,28 +1,46 @@
-import Vue from "vue";
-import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+import home from '@/views/home'
+import noFound from '@/components/noFound'
 
-Vue.use(VueRouter);
+Vue.use(VueRouter)
 
 const routes = [
   {
-    path: "/",
-    name: "Home",
-    component: Home
+    path: '*',
+    component: noFound
   },
   {
-    path: "/about",
-    name: "About",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/About.vue")
+    path: '/',
+    name: 'Home',
+    component: home
   }
-];
+]
 
 const router = new VueRouter({
+  mode: 'history',
   routes
-});
+})
 
-export default router;
+export default router
+
+// 全局路由守卫
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    // 需要登录才可以访问
+    if (!localStorage.getItem('token')) {
+      // token存在条件
+      const toLink = to.fullPath
+      next({
+        path: '/login', // 验证失败要跳转的页面
+        query: {
+          redirect: toLink, // 要传的参数
+        },
+      })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
+})
